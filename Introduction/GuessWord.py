@@ -80,17 +80,14 @@ def get_word(words):
 
 def get_guess():
     while True:
-        guess = input("\nGuess a letter: ").upper()
-
-        if len(guess) != 1:
-            print("Please enter a single letter.")
-            continue
+        guess = input("\nGuess a letter or the full word: ").upper()
 
         if not guess.isalpha():
-            print("Please enter a letter (a–z).")
+            print("Please enter letters only.")
             continue
 
         return guess
+
     
 
 def check_letter(word, display, guess, attempts):
@@ -123,32 +120,44 @@ def guess_word():
 
     max_attempts = len(HANGMAN_PICS) - 1
     attempts = max_attempts
-
     used_letters = []
 
     while attempts > 0:
         wrong_guesses = max_attempts - attempts
         print(HANGMAN_PICS[wrong_guesses])
 
-        print('\nWord to guess:\n', ' '.join(display))
+        print("\nWord to guess:")
+        print(" ".join(display))
 
-        if len(used_letters) != 0:
+        if used_letters:
             print("\nUsed letters:", " ".join(used_letters))
 
         guess = get_guess()
 
-        is_new = guessed_letters(used_letters, guess)
-        if not is_new:
+        # ---- FULL WORD GUESS ----
+        if len(guess) > 1:
+            if guess == word:
+                print(HANGMAN_PICS[max_attempts - attempts])
+                print("\nThe word was:", " ".join(word))
+                return "\n🎉 You win!"
+            else:
+                attempts -= 1
+                print(f"   {guess} is not the word. {attempts} attempts remaining.")
+                continue
+
+        # ---- SINGLE LETTER GUESS ----
+        if not guessed_letters(used_letters, guess):
             continue
 
         display, attempts = check_letter(word, display, guess, attempts)
 
         if check_win(display):
             print(HANGMAN_PICS[max_attempts - attempts])
-            print('\nThe word was:', ' '.join(display))
-            return '\nYou win!'
-        
-    return f'You lose. The word was {word}'
+            print("\nThe word was:", " ".join(word))
+            return "\n🎉 You win!"
+
+    return f"{HANGMAN_PICS[max_attempts - attempts]}\n💀 You lose. The word was {word}"
+
 
 
 result = guess_word()
