@@ -7943,9 +7943,9 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">checkout_users</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[</span><span class="n">all_data</span><span class="o">.</span><span class="n">checkout_time</span><span class="o">.</span><span class="n">notnull</span><span class="p">()]</span>
-<span class="n">checkout_not_purchase</span> <span class="o">=</span> <span class="n">checkout_users</span><span class="o">.</span><span class="n">purchase_time</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-<span class="n">checkout_not_purchase_pct</span> <span class="o">=</span> <span class="n">checkout_not_purchase</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_data</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">checkout_users</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[</span><span class="n">all_data</span><span class="o">.</span><span class="n">checkout_time</span><span class="o">.</span><span class="n">notna</span><span class="p">()]</span>
+<span class="n">checkout_not_purchase</span> <span class="o">=</span> <span class="n">checkout_users</span><span class="o">.</span><span class="n">purchase_time</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">checkout_not_purchase_pct</span> <span class="o">=</span> <span class="n">checkout_not_purchase</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">checkout_users</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">checkout_not_purchase_pct</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2"> of shoppers checked out but did not purchase a t-shirt."</span><span class="p">)</span>
 </pre></div>
@@ -7960,7 +7960,7 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>3.89% of shoppers checked out but did not purchase a t-shirt.
+<pre>24.55% of shoppers checked out but did not purchase a t-shirt.
 </pre>
 </div>
 </div>
@@ -8002,7 +8002,7 @@ a.anchor-link {
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>82.6 percent of users who visited the page did not add a t-shirt to their cart
 35.06 percent of users who added a t-shirt to their cart did not checkout
-3.89 percent of users who made it to checkout  did not purchase a shirt
+24.55 percent of users who made it to checkout  did not purchase a shirt
 </pre>
 </div>
 </div>
