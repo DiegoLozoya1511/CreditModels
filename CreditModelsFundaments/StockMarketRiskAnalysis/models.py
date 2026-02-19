@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from scipy.stats import norm
 
 from financials import FinancialDataFetcher
@@ -85,9 +86,10 @@ class Altman(FinancialDataFetcher):
     
 
 class Merton(FinancialDataFetcher):
-    def __init__(self, ticker: str):
+    def __init__(self, ticker: str, T: float = 1.0):
         super().__init__(ticker)
-        
+        self.T = T
+    
     def liability_threshold(self) -> float:
         """
         Calculate the default point L = Current Liabilities + 0.5 x Long-term Debt
@@ -105,47 +107,63 @@ class Merton(FinancialDataFetcher):
         L = current_liabilities + 0.5 * long_term_liabilities
         return L
     
-    def assets_mean(self) -> float:
+    def asset_volatility(self) -> float:
         """
-        Calculates the mean of total assets of all the available data.
+        Calculates annualized volatility of asset log returns.
+        Assumes annual financial statement data.
         
         Returns:
-            float: The mean of total assets.
+            float: Annualized asset volatility.
         """
-        return self.total_assets().mean()
-    
-    def assets_variance(self) -> float:
+        assets = pd.Series(self.total_assets())
+        assets = pd.to_numeric(assets, errors='coerce')
+        
+        log_returns = np.log(assets / assets.shift(1)).dropna() # Lognormal distribution assumption
+        
+        sigma_A = log_returns.std()
+        return sigma_A
+
+    def expected_asset_return(self) -> float:
         """
-        Calculates the variance of total assets of all the available data.
+        Calculates the expected return of assets as the mean of log returns.
         
         Returns:
-            float: The variance of total assets.
-        """
-        return self.total_assets().var()
+            float: Expected return of assets.
+        """        
+        assets = pd.Series(self.total_assets())
+        assets = pd.to_numeric(assets, errors='coerce')
+        
+        log_returns = np.log(assets / assets.shift(1)).dropna() # Lognormal distribution assumption
+        
+        return log_returns.mean() 
     
     def distance_to_default(self) -> float:
         """
-        Calculates the distance to default (DD) using the Merton model.
+        Calculates distance to default (DD).
         
         Returns:
-            float: The distance to default.
+            float: Distance to default.
         """
         A = self.total_assets()[0]
         L = self.liability_threshold()
-        mean_A = self.assets_mean()
-        variance_A = self.assets_variance()
-        volatility_A = np.sqrt(variance_A)
+        mu = self.expected_asset_return()
+        sigma = self.asset_volatility()
+        T = self.T
         
-        DD = (np.log(A) + (mean_A - 0.5 * variance_A) - np.log(L)) / volatility_A
+        # Merton DD formula
+        numerator = np.log(A/L) + (mu - 0.5 * sigma**2) * T
+        denominator = sigma * np.sqrt(T)
+        
+        DD = numerator / denominator
         return DD
     
     def default_probability(self) -> float:
         """
-        Calculates the default probability (PD) using the distance to default.
+        Calculates default probability (PD) from distance to default.
         
         Returns:
-            float: The default probability.
-        """        
+            float: Default probability.
+        """
         DD = self.distance_to_default()
         PD = 1 - norm.cdf(DD)
         return PD
