@@ -170,7 +170,7 @@ class Merton(FinancialDataFetcher):
         return PD
     
     
-class CreditDecision():
+class CreditDecision:
     def __init__(self, results: dict):
         self.results = results
 

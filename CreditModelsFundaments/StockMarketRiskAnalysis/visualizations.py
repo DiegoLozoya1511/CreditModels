@@ -1,5 +1,9 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
+
+from models import CreditDecision
 
 plt.rcParams['figure.figsize'] = (12, 6)
 plt.rcParams['axes.grid'] = True
@@ -13,21 +17,17 @@ plt.rcParams['legend.edgecolor'] = 'black'
 plt.rcParams['legend.loc'] = 'best'
 
 
-class ModelsVisualization:
+class ModelsVisualization(CreditDecision):
     """
     Visualizer for Altman Z-Score analysis with support for bar charts and spider charts.
     """
     
-    def __init__(self, altman_z_scores: dict = None, component_ratios: dict = None):
-        """
-        Initialize the visualizer with Z-scores and/or component ratios.
-        
-        Args:
-            altman_z_scores (dict): {ticker: [z_score_2025, z_score_2024]}
-            component_ratios (dict): {ticker: [ratio_arrays]} where each array is [2025, 2024]
-        """
+    def __init__(self, results: dict, altman_z_scores: dict = None, 
+                 component_ratios: dict = None, default_probabilities: dict = None):
+        super().__init__(results)
         self.altman_z_scores = altman_z_scores
         self.component_ratios = component_ratios
+        self.default_probabilities = default_probabilities
         self.categories = ['Liquidity', 'Profitability', 'Efficiency', 'Leverage', 'Turnover']
     
     def plot_z_score_comparison(self) -> None:
@@ -84,6 +84,102 @@ class ModelsVisualization:
         # Hide unused subplots
         for idx in range(n_tickers, len(axes)):
             axes[idx].axis('off')
+        
+        plt.tight_layout()
+        return fig
+    
+    def plot_credit_decision_analysis(self):
+        """
+        Plot Z-Score vs Default Probability with credit decision boundaries.
+        
+        Returns:
+            fig: The matplotlib figure object for credit decision analysis.
+        """
+        if self.altman_z_scores is None or self.default_probabilities is None:
+            raise ValueError("Both Z-scores and default probabilities required for credit decision plot.")
+        
+        # Prepare combined metrics
+        combined_metrics = {
+            ticker: [self.altman_z_scores[ticker][0], self.default_probabilities[ticker]]
+            for ticker in self.altman_z_scores.keys()
+        }
+        
+        fig, ax = plt.subplots(figsize=(12, 7))
+        
+        # Get axis limits first to properly fill zones
+        all_z_scores = [z_score for _, [z_score, _] in combined_metrics.items()]
+        all_pds = [default_prob * 100 for _, [_, default_prob] in combined_metrics.items()]
+        
+        x_min = min(min(all_z_scores) * 0.9, 0)
+        x_max = max(max(all_z_scores) * 1.1, 4)
+        y_max = max(max(all_pds) * 1.2, 20)
+        
+        # Define decision zones with full coloring
+        # APPROVAL ZONE
+        ax.fill([1.8, x_max, x_max, 1.8], [0, 0, 15, 15], 
+                color='darkseagreen', alpha=0.2, label='Approval Zone')
+        
+        # DENIAL ZONE
+        ax.fill([x_min, x_max, x_max, x_min], [15, 15, y_max, y_max], 
+                color='indianred', alpha=0.2, label='Denial Zone')
+        ax.fill([x_min, 1.8, 1.8, x_min], [0, 0, 15, 15], 
+                color='indianred', alpha=0.2, label='Denial Zone')
+        
+        # Add decision boundary lines
+        ax.axvline(x=3.0, color='darkseagreen', linestyle='--', linewidth=2, 
+                alpha=0.7, zorder=2)
+        ax.axvline(x=1.8, color='indianred', linestyle='--', linewidth=2, 
+                alpha=0.7, zorder=2)
+        ax.axhline(y=5, color='darkseagreen', linestyle='--', linewidth=2, 
+                alpha=0.7, zorder=2)
+        ax.axhline(y=15, color='indianred', linestyle='--', linewidth=2, 
+                alpha=0.7, zorder=2)
+        
+        # Plot each ticker
+        for ticker, [z_score, default_prob] in combined_metrics.items():
+            decision = self.credit_decision(z_score, default_prob)
+            
+            # Color and marker based on decision
+            if decision == "APPROVED":
+                color = 'darkseagreen'
+                marker = 'o'
+                size = 200
+            else:  # DENIED
+                color = 'indianred'
+                marker = 'x'
+                size = 200
+            
+            ax.scatter(z_score, default_prob * 100, c=color, marker=marker, s=size, 
+                       edgecolors=color, linewidth=2, alpha=0.9, zorder=3)
+            ax.text(z_score + 0.08, default_prob * 100, ticker, fontsize=11, 
+                    va='center', zorder=4)
+        
+        legend_elements = [
+            Line2D([0], [0], marker='o', color='w', markerfacecolor='darkseagreen', 
+                markersize=12, markeredgecolor='darkseagreen', markeredgewidth=2, 
+                label='APPROVED'),
+            Line2D([0], [0], marker='x', color='w', markerfacecolor='indianred', 
+                markersize=12, markeredgecolor='indianred', markeredgewidth=2, 
+                label='DENIED'),
+            Patch(facecolor='darkseagreen', alpha=0.25, label='Approval Zone'),
+            Patch(facecolor='indianred', alpha=0.25, label='Denial Zone')
+        ]
+        
+        # Add legend
+        ax.legend(handles=legend_elements, loc='best', 
+                title='Credit Decision', fontsize=11, 
+                title_fontsize=12, framealpha=0.95, edgecolor='black')
+        
+        # Labels and styling
+        ax.set_xlabel('Altman Z-Score', fontsize=13)
+        ax.set_ylabel('Default Probability (%)', fontsize=13)
+        ax.set_title('Credit Decision Analysis: Z-Score vs Default Probability', 
+                    fontsize=15, fontweight='bold', pad=20)
+        ax.grid(alpha=0.3, linestyle=':', linewidth=0.5, zorder=1)
+        
+        # Set axis limits
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(0, y_max)
         
         plt.tight_layout()
         return fig
@@ -155,4 +251,3 @@ class ModelsVisualization:
         
         ax.set_title(ticker, size=14, fontweight='bold', pad=20)
         ax.legend(loc='upper right', bbox_to_anchor=(1.25, 1.1))
-
