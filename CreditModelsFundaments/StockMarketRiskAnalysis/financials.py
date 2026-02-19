@@ -18,8 +18,8 @@ class FinancialDataFetcher:
             tuple[pd.DataFrame, pd.DataFrame]: Balance sheet and income statement.
         """
         stock = yf.Ticker(self.ticker)
-        self.bs = stock.balance_sheet.iloc[:, :2]
-        self.ist = stock.income_stmt.iloc[:, :2]
+        self.bs = stock.balance_sheet.iloc[:, :-1]
+        self.ist = stock.income_stmt.iloc[:, :-1]
         return self.bs, self.ist
 
     def total_assets(self) -> float:

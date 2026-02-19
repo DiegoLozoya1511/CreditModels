@@ -1,6 +1,6 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-from models import StockMarketRiskModels
+from models import Altman, Merton
 from visualizations import ModelsVisualization
 
 # Page config
@@ -34,9 +34,15 @@ def main():
                 ratios = {}
                 
                 for ticker in tickers:
-                    stock = StockMarketRiskModels(ticker)
+                    stock = Altman(ticker)
                     altman_z_scores[ticker] = stock.altman_z_score()
                     ratios[ticker] = stock.get_ratio_components()
+                    
+                default_probabilities = {}
+                
+                for ticker in tickers:
+                    stock = Merton(ticker)
+                    default_probabilities[ticker] = stock.default_probability()
                 
                 st.success(f"Analysis complete for {', '.join(tickers)}!")
                 st.markdown("---")
@@ -67,6 +73,10 @@ def main():
                 # 2. Merton Default Probability Model
                 st.header("Merton Default Probability Model")
                 
+                # quick print of default probabilities
+                st.subheader("Default Probabilities")
+                for ticker, prob in default_probabilities.items():
+                    st.markdown(f"- **{ticker}**: {prob:.2%}")
                 
                 
                 # 3. Interpretation

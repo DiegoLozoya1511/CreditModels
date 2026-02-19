@@ -96,13 +96,13 @@ class ModelsVisualization:
         # 2024 bars
         ax.bar(x - width/2, z_scores_old, width, color='cornflowerblue', label='2024')
         for i, height in enumerate(z_scores_old):
-            ax.text(x[i] - width/2, 0.9 * height, f'{height:.2f}', 
+            ax.text(x[i] - width/2, height - 0.15, f'{height:.2f}', 
                    ha='center', va='bottom', fontsize=9, color='black')
 
         # 2025 bars
         ax.bar(x + width/2, z_scores_current, width, color='navy', label='2025')
         for i, height in enumerate(z_scores_current):
-            ax.text(x[i] + width/2, 0.9 * height, f'{height:.2f}', 
+            ax.text(x[i] + width/2, height - 0.15, f'{height:.2f}', 
                    ha='center', va='bottom', fontsize=9, color='white')
     
     def _customize_bar_plot(self, ax: plt.Axes, x: np.ndarray, tickers: list[str]) -> None:

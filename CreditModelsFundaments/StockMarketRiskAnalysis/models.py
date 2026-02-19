@@ -1,11 +1,13 @@
 import numpy as np
-import pandas as pd
+from scipy.stats import norm
 
 from financials import FinancialDataFetcher
 
-class StockMarketRiskModels(FinancialDataFetcher):
+class Altman(FinancialDataFetcher):
     def __init__(self, ticker: str):
         super().__init__(ticker)
+        self.bs = self.bs.iloc[:, :2]
+        self.ist = self.ist.iloc[:, :2]
         
     def liquidity_ratio(self) -> float:
         """
@@ -80,3 +82,70 @@ class StockMarketRiskModels(FinancialDataFetcher):
 
         Z = 0.012 * X1 + 0.014 * X2 + 0.033 * X3 + 0.006 * X4 + 0.999 * X5
         return Z
+    
+
+class Merton(FinancialDataFetcher):
+    def __init__(self, ticker: str):
+        super().__init__(ticker)
+        
+    def liability_threshold(self) -> float:
+        """
+        Calculate the default point L = Current Liabilities + 0.5 x Long-term Debt
+        
+        Returns:
+            float: The default point L.
+        """
+        current_liabilities = self.current_liabilities()[0]
+        total_liabilities = self.total_liabilities()[0]
+        
+        # Long-term debt = Total - Current
+        long_term_liabilities = total_liabilities - current_liabilities
+        
+        # Threshold
+        L = current_liabilities + 0.5 * long_term_liabilities
+        return L
+    
+    def assets_mean(self) -> float:
+        """
+        Calculates the mean of total assets of all the available data.
+        
+        Returns:
+            float: The mean of total assets.
+        """
+        return self.total_assets().mean()
+    
+    def assets_variance(self) -> float:
+        """
+        Calculates the variance of total assets of all the available data.
+        
+        Returns:
+            float: The variance of total assets.
+        """
+        return self.total_assets().var()
+    
+    def distance_to_default(self) -> float:
+        """
+        Calculates the distance to default (DD) using the Merton model.
+        
+        Returns:
+            float: The distance to default.
+        """
+        A = self.total_assets()[0]
+        L = self.liability_threshold()
+        mean_A = self.assets_mean()
+        variance_A = self.assets_variance()
+        volatility_A = np.sqrt(variance_A)
+        
+        DD = (np.log(A) + (mean_A - 0.5 * variance_A) - np.log(L)) / volatility_A
+        return DD
+    
+    def default_probability(self) -> float:
+        """
+        Calculates the default probability (PD) using the distance to default.
+        
+        Returns:
+            float: The default probability.
+        """        
+        DD = self.distance_to_default()
+        PD = 1 - norm.cdf(DD)
+        return PD
