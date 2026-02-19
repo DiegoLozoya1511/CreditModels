@@ -33,6 +33,9 @@ class ModelsVisualization:
     def plot_z_score_comparison(self) -> None:
         """
         Plots bar chart comparing Altman Z-scores across years.
+        
+        Returns:
+            fig: The matplotlib figure object for the Z-score comparison.
         """
         if self.altman_z_scores is None:
             raise ValueError("No Z-score data provided. Initialize with altman_z_scores.")
@@ -61,6 +64,9 @@ class ModelsVisualization:
     def plot_component_spider_charts(self) -> None:
         """
         Plots spider charts showing component ratios for each ticker.
+        
+        Returns:
+            fig: The matplotlib figure object containing the spider charts.
         """        
         n_tickers = len(self.component_ratios)
         n_cols = 2

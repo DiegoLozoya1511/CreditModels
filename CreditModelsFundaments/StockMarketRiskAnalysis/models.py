@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import streamlit as st
 from scipy.stats import norm
 
 from financials import FinancialDataFetcher
@@ -167,3 +168,70 @@ class Merton(FinancialDataFetcher):
         DD = self.distance_to_default()
         PD = 1 - norm.cdf(DD)
         return PD
+    
+    
+class CreditDecision():
+    def __init__(self, results: dict):
+        self.results = results
+
+    def credit_decision(self, z_score: float, PD: float) -> str:
+        """
+        Makes a credit approval decision.
+        
+        Args:
+            z_score (float): The Altman Z-score.
+            PD (float): The Merton default probability.
+            
+        Returns:
+            str: "APPROVED" or "DENIED" based on the decision rules.
+        """
+        Z_SAFE = 3.0
+        Z_DISTRESS = 1.8
+        PD_LOW = 0.05
+        PD_HIGH = 0.15
+        
+        if z_score >= Z_SAFE and PD <= PD_LOW:
+            return "APPROVED"
+        if z_score < Z_DISTRESS and PD >= PD_HIGH:
+            return "DENIED"
+        if z_score < Z_DISTRESS or PD >= PD_HIGH:
+            return "DENIED"
+        if z_score >= Z_SAFE or PD <= PD_LOW:
+            return "APPROVED"
+        return "DENIED"
+    
+    def display_summary_streamlit(self):
+        """
+        Display summary directly in Streamlit.
+        """
+        # Create DataFrame
+        data = []
+        decisions_count = {'APPROVED': 0, 'DENIED': 0}
+        
+        for ticker, [z_score, PD] in self.results.items():
+            decision = self.credit_decision(z_score, PD)
+            decisions_count[decision] += 1
+            
+            data.append({
+                'Ticker': ticker,
+                'Z-Score': f"{z_score:.2f}",
+                'Default Prob': f"{PD:.2%}",
+                'Decision': "✓ APPROVED" if decision == "APPROVED" else "✗ DENIED"
+            })
+        
+        df = pd.DataFrame(data)
+        
+        # Display table
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        
+        # Display metrics
+        st.markdown("---")
+        col1, col2, col3 = st.columns([1, 1, 2])
+        
+        with col1:
+            st.metric("✓ Approved", decisions_count['APPROVED'])
+        with col2:
+            st.metric("✗ Denied", decisions_count['DENIED'])
+        with col3:
+            approval_rate = (decisions_count['APPROVED'] / len(self.results)) * 100
+            st.metric("Approval Rate", f"{approval_rate:.1f}%")

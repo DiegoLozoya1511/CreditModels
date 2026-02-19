@@ -1,6 +1,6 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-from models import Altman, Merton
+from models import Altman, Merton, CreditDecision
 from visualizations import ModelsVisualization
 
 # Page config
@@ -78,10 +78,17 @@ def main():
                 for ticker, prob in default_probabilities.items():
                     st.markdown(f"- **{ticker}**: {prob:.2%}")
                 
-                
-                # 3. Interpretation
-                st.header("Interpretation")
-                
+                # 3. Credit Decision Analysis
+                st.header("Credit Decision Analysis")
+                st.write("Combined risk assessment using Altman Z-Score and Merton Default Probability")
+
+                results = {
+                    ticker: [altman_z_scores[ticker][0], default_probabilities[ticker]] 
+                    for ticker in altman_z_scores.keys()
+                }
+
+                decision = CreditDecision(results)
+                decision.display_summary_streamlit()
                 
                 # 4. Sources
                 st.header("Sources")
