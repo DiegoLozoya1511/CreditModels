@@ -9,8 +9,8 @@ plt.rcParams['figure.figsize'] = (12, 6)
 plt.rcParams['axes.grid'] = True
 plt.rcParams['grid.alpha'] = 0.5
 plt.rcParams['grid.linestyle'] = '--'
-plt.rcParams['axes.titlesize'] = 16
-plt.rcParams['axes.labelsize'] = 12
+plt.rcParams['axes.titlesize'] = 10
+plt.rcParams['axes.labelsize'] = 8
 plt.rcParams['legend.frameon'] = True
 plt.rcParams['legend.facecolor'] = 'white'
 plt.rcParams['legend.edgecolor'] = 'black'
@@ -47,7 +47,7 @@ class ModelsVisualization(CreditDecision):
         x = np.arange(len(tickers))
         width = 0.35
 
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(6, 4))
 
         # Threshold areas
         self._add_threshold_zones(ax)
@@ -72,7 +72,7 @@ class ModelsVisualization(CreditDecision):
         n_cols = 2
         n_rows = (n_tickers + 1) // 2
         
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=(10, 4 * n_rows), 
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(7, 3 * n_rows), 
                                 subplot_kw=dict(projection='polar'))
         axes = axes.flatten() if n_tickers > 1 else [axes]
         
@@ -104,7 +104,7 @@ class ModelsVisualization(CreditDecision):
             for ticker in self.altman_z_scores.keys()
         }
         
-        fig, ax = plt.subplots(figsize=(12, 7))
+        fig, ax = plt.subplots(figsize=(6, 4))
         
         # Get axis limits first to properly fill zones
         all_z_scores = [z_score for _, [z_score, _] in combined_metrics.items()]
@@ -126,14 +126,10 @@ class ModelsVisualization(CreditDecision):
                 color='indianred', alpha=0.2, label='Denial Zone')
         
         # Add decision boundary lines
-        ax.axvline(x=3.0, color='darkseagreen', linestyle='--', linewidth=2, 
-                alpha=0.7, zorder=2)
-        ax.axvline(x=1.8, color='indianred', linestyle='--', linewidth=2, 
-                alpha=0.7, zorder=2)
-        ax.axhline(y=5, color='darkseagreen', linestyle='--', linewidth=2, 
-                alpha=0.7, zorder=2)
-        ax.axhline(y=15, color='indianred', linestyle='--', linewidth=2, 
-                alpha=0.7, zorder=2)
+        ax.axvline(x=3.0, color='darkseagreen', linestyle='--', alpha=0.7, zorder=2)
+        ax.axvline(x=1.8, color='indianred', linestyle='--', alpha=0.7, zorder=2)
+        ax.axhline(y=5, color='darkseagreen', linestyle='--', alpha=0.7, zorder=2)
+        ax.axhline(y=15, color='indianred', linestyle='--', alpha=0.7, zorder=2)
         
         # Plot each ticker
         for ticker, [z_score, default_prob] in combined_metrics.items():
@@ -143,39 +139,39 @@ class ModelsVisualization(CreditDecision):
             if decision == "APPROVED":
                 color = 'darkseagreen'
                 marker = 'o'
-                size = 200
+                size = 50
             else:  # DENIED
                 color = 'indianred'
                 marker = 'x'
-                size = 200
+                size = 50
             
             ax.scatter(z_score, default_prob * 100, c=color, marker=marker, s=size, 
                        edgecolors=color, linewidth=2, alpha=0.9, zorder=3)
-            ax.text(z_score + 0.08, default_prob * 100, ticker, fontsize=11, 
+            ax.text(z_score + 0.08, 0.5 + default_prob * 100, ticker, fontsize=6, 
                     va='center', zorder=4)
         
         legend_elements = [
             Line2D([0], [0], marker='o', color='w', markerfacecolor='darkseagreen', 
-                markersize=12, markeredgecolor='darkseagreen', markeredgewidth=2, 
+                markersize=6, markeredgecolor='darkseagreen', markeredgewidth=2, 
                 label='APPROVED'),
             Line2D([0], [0], marker='x', color='w', markerfacecolor='indianred', 
-                markersize=12, markeredgecolor='indianred', markeredgewidth=2, 
+                markersize=6, markeredgecolor='indianred', markeredgewidth=2, 
                 label='DENIED'),
             Patch(facecolor='darkseagreen', alpha=0.25, label='Approval Zone'),
             Patch(facecolor='indianred', alpha=0.25, label='Denial Zone')
         ]
         
         # Add legend
-        ax.legend(handles=legend_elements, loc='best', 
-                title='Credit Decision', fontsize=11, 
-                title_fontsize=12, framealpha=0.95, edgecolor='black')
+        ax.legend(handles=legend_elements, loc='best', fontsize=6, framealpha=0.95, edgecolor='black')
         
         # Labels and styling
-        ax.set_xlabel('Altman Z-Score', fontsize=13)
-        ax.set_ylabel('Default Probability (%)', fontsize=13)
+        ax.set_xlabel('Altman Z-Score', fontsize=8)
+        ax.set_ylabel('Default Probability (%)', fontsize=8)
         ax.set_title('Credit Decision Analysis: Z-Score vs Default Probability', 
-                    fontsize=15, fontweight='bold', pad=20)
+                    fontsize=10, fontweight='bold', pad=20)
         ax.grid(alpha=0.3, linestyle=':', linewidth=0.5, zorder=1)
+        ax.tick_params(axis='x', labelsize=7)
+        ax.tick_params(axis='y', labelsize=7)
         
         # Set axis limits
         ax.set_xlim(x_min, x_max)
@@ -186,8 +182,8 @@ class ModelsVisualization(CreditDecision):
     
     def _add_threshold_zones(self, ax: plt.Axes) -> None:
         """Add Z-score threshold lines and zones."""
-        ax.axhline(y=3.0, color='darkseagreen', linestyle='--', linewidth=1.5)
-        ax.axhline(y=1.8, color='indianred', linestyle='--', linewidth=1.5)
+        ax.axhline(y=3.0, color='darkseagreen', linestyle='--')
+        ax.axhline(y=1.8, color='indianred', linestyle='--')
         
         ax.axhspan(3.0, 5.0, color='darkseagreen', alpha=0.25, label='Low Bankruptcy Risk')
         ax.axhspan(0, 1.8, color='indianred', alpha=0.25, label='High Bankruptcy Risk')
@@ -199,24 +195,25 @@ class ModelsVisualization(CreditDecision):
         ax.bar(x - width/2, z_scores_old, width, color='cornflowerblue', label='2024')
         for i, height in enumerate(z_scores_old):
             ax.text(x[i] - width/2, height - 0.15, f'{height:.2f}', 
-                   ha='center', va='bottom', fontsize=9, color='black')
+                   ha='center', va='bottom', fontsize=5, color='black')
 
         # 2025 bars
         ax.bar(x + width/2, z_scores_current, width, color='navy', label='2025')
         for i, height in enumerate(z_scores_current):
             ax.text(x[i] + width/2, height - 0.15, f'{height:.2f}', 
-                   ha='center', va='bottom', fontsize=9, color='white')
+                   ha='center', va='bottom', fontsize=5, color='white')
     
     def _customize_bar_plot(self, ax: plt.Axes, x: np.ndarray, tickers: list[str]) -> None:
         """Customize bar plot appearance."""
-        ax.set_xlabel('Ticker', fontsize=12)
-        ax.set_ylabel('Altman Z-Score', fontsize=12)
-        ax.set_title('Altman Z-Score Comparison: 2025 vs 2024', fontsize=14, fontweight='bold')
+        ax.set_xlabel('Ticker', fontsize=8)
+        ax.set_ylabel('Altman Z-Score', fontsize=8)
+        ax.set_title('Altman Z-Score Comparison: 2025 vs 2024', fontsize=10, fontweight='bold')
         ax.set_xticks(x)
-        ax.set_xticklabels(tickers)
+        ax.set_xticklabels(tickers, fontsize=7)
         ax.set_ylim(0, 4.2)
-        ax.legend()
+        ax.legend(fontsize=6)
         ax.grid(axis='y', alpha=0.3)
+        ax.tick_params(axis='y', labelsize=7)
     
     def _get_spider_angles(self) -> list[float]:
         """Calculate angles for spider chart."""
@@ -243,11 +240,12 @@ class ModelsVisualization(CreditDecision):
         
         # Customize
         ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(self.categories, size=10)
+        ax.set_xticklabels(self.categories, size=7)
         
         max_val = max(max(values_2025[:-1]), max(values_2024[:-1]))
         min_val = min(min(values_2025[:-1]), min(values_2024[:-1]))
         ax.set_ylim(min_val * 1.2 if min_val < 0 else 0, max_val * 1.2)
         
-        ax.set_title(ticker, size=14, fontweight='bold', pad=20)
-        ax.legend(loc='upper right', bbox_to_anchor=(1.25, 1.1))
+        ax.set_title(ticker, size=10, fontweight='bold', pad=20)
+        ax.legend(loc='upper right', bbox_to_anchor=(1.25, 1.1), fontsize=6)
+        ax.tick_params(axis='both', labelsize=6)
