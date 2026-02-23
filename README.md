@@ -1,0 +1,2 @@
+# CreditModels
+Credit models class
